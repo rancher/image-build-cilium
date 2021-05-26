@@ -1,0 +1,65 @@
+From e82ccb54d69fac9d1c1a6a62c72e750163e1cc7e Mon Sep 17 00:00:00 2001
+From: Manuel Buil <mbuil@suse.com>
+Date: Mon, 17 May 2021 14:46:27 +0200
+Subject: [PATCH] Hardening builder image
+
+Signed-off-by: Manuel Buil <mbuil@suse.com>
+---
+ images/builder/Dockerfile        | 17 ++++-------------
+ images/builder/install-protoc.sh |  1 +
+ 2 files changed, 5 insertions(+), 13 deletions(-)
+
+diff --git a/images/builder/Dockerfile b/images/builder/Dockerfile
+index 311fc56f8..baf589156 100644
+--- a/images/builder/Dockerfile
++++ b/images/builder/Dockerfile
+@@ -1,16 +1,12 @@
+ # Copyright 2020 Authors of Cilium
+ # SPDX-License-Identifier: Apache-2.0
+ 
+-ARG COMPILERS_IMAGE=docker.io/cilium/image-compilers:57f235db9a07e81c5b60c536498ecbf2501dd267@sha256:080245ac0d7d061e05613e6bf887dc3c8bb07392cd2ce265b8a4aaaad17f2125
+-ARG TESTER_IMAGE=docker.io/cilium/image-tester:70724309b859786e0a347605e407c5261f316eb0@sha256:89cc1f577d995021387871d3dbeb771b75ab4d70073d9bcbc42e532792719781
+-ARG GOLANG_IMAGE=docker.io/library/golang:1.15.11@sha256:a4dbaabb67af3cc2a41168a32cbd7035738692b38bbb5392498ec34dbee9216b
++ARG COMPILERS_IMAGE=rancher/hardened-cilium-compilers:4c18d06f1d545ed6fde810c2b97935dc8938ddc8-build20210521
++ARG GOLANG_IMAGE=goboring/golang:1.15.8b5
++ARG RUNTIME_IMAGE=mbuilsuse/cilium-runtime:testing1-20210517
+ 
+ FROM ${GOLANG_IMAGE} as golang-dist
+ 
+-FROM ${COMPILERS_IMAGE} as rootfs
+-LABEL maintainer="maintainer@cilium.io"
+-
+-COPY --from=golang-dist /usr/local/go /usr/local/go
+ RUN mkdir -p /go
+ ENV GOROOT /usr/local/go
+ ENV GOPATH /go
+@@ -22,13 +18,8 @@ RUN /tmp/build-go-deps.sh
+ COPY install-protoc.sh /tmp/install-protoc.sh
+ RUN /tmp/install-protoc.sh
+ 
+-FROM ${TESTER_IMAGE} as test
+-COPY --from=rootfs / /
+-COPY test /test
+-RUN /test/bin/cst
+-
+ # this image is large, and re-using layers is beneficial,
+ # so final images is not squashed
+-FROM rootfs
++FROM golang-dist
+ LABEL maintainer="maintainer@cilium.io"
+ WORKDIR /go/src/github.com/cilium/cilium
+diff --git a/images/builder/install-protoc.sh b/images/builder/install-protoc.sh
+index 790f63c94..5067b0504 100755
+--- a/images/builder/install-protoc.sh
++++ b/images/builder/install-protoc.sh
+@@ -14,6 +14,7 @@ curl --fail --show-error --silent --location \
+   "https://github.com/protocolbuffers/protobuf/releases/download/v${protoc_version}/protoc-${protoc_version}-linux-x86_64.zip" \
+     --output /tmp/protoc.zip
+ 
++apt update && apt install -y unzip libelf-dev
+ unzip /tmp/protoc.zip -x readme.txt -d /usr/local
+ 
+ # correct permissions for others
+-- 
+2.26.2
+
