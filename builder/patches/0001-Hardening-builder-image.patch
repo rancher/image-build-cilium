@@ -22,7 +22,7 @@ index 311fc56f8..baf589156 100644
 -ARG GOLANG_IMAGE=docker.io/library/golang:1.15.11@sha256:a4dbaabb67af3cc2a41168a32cbd7035738692b38bbb5392498ec34dbee9216b
 +ARG COMPILERS_IMAGE=rancher/hardened-cilium-compilers:4c18d06f1d545ed6fde810c2b97935dc8938ddc8-build20210521
 +ARG GOLANG_IMAGE=goboring/golang:1.15.8b5
-+ARG RUNTIME_IMAGE=mbuilsuse/cilium-runtime:testing1-20210517
++ARG RUNTIME_IMAGE=rancher/hardened-cilium-runtime:v1.9.6-build20210526
  
  FROM ${GOLANG_IMAGE} as golang-dist
  
